@@ -138,7 +138,7 @@ int main()
 	};
 
 	supercomplex::dfa<char, c_token> dfa_machine(nfa_machine.start());
-	dfa_machine.optimize(true);
+	dfa_machine.optimize();
 	codegen(std::cout, dfa_machine);
 
 	return 0;

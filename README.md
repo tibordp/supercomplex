@@ -36,6 +36,5 @@ generating lexer accepting Unicode characters should not be a problem. Note that
  character type as the string being matched.
 
 Since `supercomplex` is target-agnostic, you have to provide your own code generator for the target language. See
-`examples/codegen_c.cpp` for an example code generator for C programming language. The example has the lexical
-description hardcoded - it generates a lexer accepting simple arithmetic expressions, but this can very simply be
-extended.
+`examples/codegen_dfa_only.cpp` to see the capabilities of DFA generation and `examples/codegen_c.cpp` for a more
+substantial example - a lexer generator for C programming language.

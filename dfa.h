@@ -354,13 +354,14 @@ namespace supercomplex {
 			}
 			_nodes = set_type(result.begin(), result.end());
 			_initial = initial;
+			aggregate();
 		}
 
 		/**
 		* Moore's algorithm for DFA state minimization. Identifies all the indistinguishable subsets of
 		* DFA states and replaces them with a single state.
 		*/
-		void optimize(bool aggregate_intervals)
+		void optimize()
 		{
 			// Compilers: Principles, Techniques and Tools SE, page 182
 			std::unordered_set<set_type, dfa_set_hash, dfa_set_eq> Gamma, newGamma;
@@ -450,7 +451,7 @@ namespace supercomplex {
 				delete node;
 			}
 
-			if (aggregate_intervals) aggregate();
+			aggregate();
 		}
 
 		const node_type& start() const
