@@ -123,7 +123,12 @@ namespace supercomplex {
 		operator_type oper;
 		operand(std::shared_ptr<regex_node<CharType, TokenInfo>> child_, operator_type oper_)
 			: child(child_), oper(oper_)
-		{}
+		{
+			if (child_.get() == nullptr)
+			{
+				throw std::runtime_error("Cannot quantify an empty string.");
+			}
+		}
 
 		nfa_segment<CharType, TokenInfo> nfa() override
 		{
@@ -219,7 +224,10 @@ namespace supercomplex {
 			{
 			case states::normal:
 				if (*begin == ']')
+				{
+					++begin;
 					return expr;
+				}
 				if (*begin == '\\')
 				{
 					state = states::escape; break;
@@ -253,19 +261,21 @@ namespace supercomplex {
 			++begin;
 		}
 
-		throw new std::runtime_error("Invalid regex.");
+		throw std::runtime_error("Invalid regular expression - unterminated char range.");
 	}
 
 	template<typename CharType, typename TokenInfo, typename T>
 	std::shared_ptr<regex_node<CharType, TokenInfo>> parse_atom(T& begin, T end)
 	{
+		if (*begin == ']')
+			throw std::runtime_error("Invalid regular expression - unmatched ]");
 		if (*begin == '?' || *begin == '*' || *begin == ')' || *begin == '+' || *begin == '|')
 			return nullptr;
 		if (*begin == '(')
 		{
 			++begin;
 			auto node = parse_regex<CharType, TokenInfo>(begin, end);
-			if (*begin != ')') throw new std::runtime_error("Invalid regex.");
+			if (*begin != ')') throw std::runtime_error("Invalid regular expression - unterminated subexpression.");
 			++begin;
 			return node;
 		}
@@ -278,10 +288,7 @@ namespace supercomplex {
 				complement = true;
 				++begin;
 			}
-			auto node = parse_char_range<CharType, TokenInfo>(begin, end, complement);
-			if (*begin != ']') throw new std::runtime_error("Invalid regex.");
-			++begin;
-			return node;
+			return parse_char_range<CharType, TokenInfo>(begin, end, complement);
 		}
 		if (*begin == '\\')
 		{
@@ -294,19 +301,16 @@ namespace supercomplex {
 	std::shared_ptr<regex_node<CharType, TokenInfo>> parse_term(T& begin, T end)
 	{
 		auto char_range = parse_atom<CharType, TokenInfo>(begin, end);
+		if (begin == end) return char_range;
 
-		if (char_range.get() == nullptr) return nullptr;
-		if (begin == end)
-			return char_range;
 		switch (*begin++)
 		{
-		case '+': return std::make_shared<operand<CharType, TokenInfo>>(char_range, operator_type::plus);
-		case '*':  return std::make_shared<operand<CharType, TokenInfo>>(char_range, operator_type::star);
-		case '?':  return std::make_shared<operand<CharType, TokenInfo>>(char_range, operator_type::optional);
-		default: {
-			--begin;
-			return char_range;
-		}
+			case '+': return std::make_shared<operand<CharType, TokenInfo>>(char_range, operator_type::plus);
+			case '*':  return std::make_shared<operand<CharType, TokenInfo>>(char_range, operator_type::star);
+			case '?':  return std::make_shared<operand<CharType, TokenInfo>>(char_range, operator_type::optional);
+			default:
+				--begin;
+				return char_range;
 		}
 	}
 
@@ -314,8 +318,6 @@ namespace supercomplex {
 	std::shared_ptr<regex_node<CharType, TokenInfo>> parse_factor(T& begin, T end)
 	{
 		std::shared_ptr<concatenate<CharType, TokenInfo>> expr(new concatenate<CharType, TokenInfo>());
-
-		expr->terms.push_back(parse_term<CharType, TokenInfo>(begin, end));
 
 		while (begin != end)
 		{
