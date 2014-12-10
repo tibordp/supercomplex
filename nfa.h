@@ -25,6 +25,8 @@ THE SOFTWARE.
 
 #include <vector>
 #include <memory>
+#include <utility>
+#include <type_traits>
 #include <boost/icl/interval_set.hpp>
 
 namespace supercomplex {
@@ -354,7 +356,7 @@ namespace supercomplex {
 	public:
 		nfa(const std::basic_string<CharType>& regex, TokenInfo token_info)
 		{
-			auto begin = regex.cbegin();
+			auto begin = regex.begin();
 			auto regex_node = parse_regex<CharType, TokenInfo>(begin, regex.end());
 			auto thunk = regex_node->nfa();
 			thunk.end->terminal = true;
@@ -362,18 +364,25 @@ namespace supercomplex {
 			_start = thunk.begin;
 		}
 
-		nfa(const std::initializer_list<terminal_node<CharType, TokenInfo>>& entries)
+		template<class Iterator>
+		nfa(Iterator begin,  Iterator end)
 		{
 			_start = new node_type();
-			for (auto && entry : entries)
+			for (; begin != end; ++begin)
 			{
-				auto begin = entry.regex.cbegin();
-				auto regex_node = parse_regex<CharType, TokenInfo>(begin, entry.regex.end());
+				auto r_begin = begin->regex.begin();
+				auto regex_node = parse_regex<CharType, TokenInfo>(r_begin, begin->regex.end());
 				auto thunk = regex_node->nfa();
 				thunk.end->terminal = true;
-				thunk.end->token = entry.token;
+				thunk.end->token = begin->token;
 				_start->transitions.emplace_back(thunk.begin);
 			}
+		}
+		
+		nfa(const std::initializer_list<terminal_node<CharType, TokenInfo>>& entries)
+			: nfa(entries.begin(), entries.end())
+		{
+			
 		}
 
 		const node_type& start() const

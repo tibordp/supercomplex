@@ -66,7 +66,7 @@ namespace supercomplex {
 
 		bool terminal() const
 		{
-			for (auto&& node : nodes)
+			for (const auto& node : nodes)
 			{
 				if (node->terminal) return true;
 			}
