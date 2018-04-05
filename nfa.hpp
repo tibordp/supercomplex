@@ -115,7 +115,7 @@ namespace supercomplex
 		character_set(){};
 		explicit character_set(CharType a)
 		{
-			char_set.insert(a);
+			char_set.add(a);
 		};
 
 		nfa_segment<CharType, TokenInfo> nfa() override
@@ -229,6 +229,26 @@ namespace supercomplex
 	template <typename CharType, typename TokenInfo, typename T>
 	std::shared_ptr<regex_node<CharType, TokenInfo>> parse_regex(T& begin, T end);
 
+	template <typename CharType>
+    void make_closed(boost::icl::interval_set<CharType>& intervals)
+	{
+		using namespace boost::icl;
+
+		interval_set<CharType> new_set;
+		for (auto&& interval : intervals)
+		{
+			bool left_open = (interval.bounds() == interval_bounds::left_open() || interval.bounds() == interval_bounds::open());
+			bool right_open = (interval.bounds() == interval_bounds::right_open() || interval.bounds() == interval_bounds::open());
+			
+			new_set.add(construct<discrete_interval<CharType>>(
+				interval.lower() + (left_open ? 1 : 0),
+				interval.upper() - (right_open ? 1 : 0),
+				interval_bounds::closed()));
+		}
+
+		std::swap(new_set, intervals);
+	};
+    
 	template <typename CharType, typename TokenInfo, typename T>
 	std::shared_ptr<regex_node<CharType, TokenInfo>> parse_char_range(T& begin,
 	    T end,
@@ -238,7 +258,7 @@ namespace supercomplex
 		std::shared_ptr<character_set<CharType, TokenInfo>> expr(
 		    new character_set<CharType, TokenInfo>());
 		CharType last;
-
+	
 		if (complement)
 			expr->char_set.add(construct<discrete_interval<CharType>>(
 			    std::numeric_limits<CharType>::min(),
@@ -263,6 +283,7 @@ namespace supercomplex
 					if (*begin == ']')
 					{
 						++begin;
+						make_closed(expr->char_set);
 						return expr;
 					}
 					if (*begin == '\\')
@@ -278,9 +299,9 @@ namespace supercomplex
 				case states::escape:
 					last = *begin;
 					if (complement)
-						expr->char_set.erase(last);
+						expr->char_set.subtract(last);
 					else
-						expr->char_set.insert(last);
+						expr->char_set.add(last);
 					state = states::normal;
 					break;
 				case states::range:
@@ -293,9 +314,9 @@ namespace supercomplex
 					auto interval = boost::icl::construct<discrete_interval<CharType>>(
 					    last, *begin, interval_bounds::closed());
 					if (complement)
-						expr->char_set.erase(interval);
+						expr->char_set.subtract(interval);
 					else
-						expr->char_set.insert(interval);
+						expr->char_set.add(interval);
 					state = states::normal;
 					break;
 			}

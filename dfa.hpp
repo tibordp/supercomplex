@@ -195,6 +195,7 @@ namespace supercomplex
 			{
 				auto lower = last.second + (last.first ? 0 : 1);
 				auto upper = current.second - (current.first ? 1 : 0);
+
 				if (lower <= upper)
 				{
 					dest.insert(
@@ -353,7 +354,7 @@ namespace supercomplex
 			std::unordered_set<node_type*, dfa_node_hash, dfa_node_eq> result;
 			std::unordered_set<const nfa_node_type*> moved;
 
-			auto start_nodes{ &start };
+			std::initializer_list<const nfa_node_type*> start_nodes{ &start };
 			eclosure(initial->nodes, start_nodes);
 
 			result.insert(initial);

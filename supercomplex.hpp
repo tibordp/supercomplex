@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include <unordered_set>
 
 #include "dfa.hpp"
 #include "nfa.hpp"
