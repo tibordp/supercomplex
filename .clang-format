@@ -2,7 +2,7 @@
 Language:        Cpp
 # BasedOnStyle:  LLVM
 AccessModifierOffset: -2
-AlignAfterOpenBracket: false
+AlignAfterOpenBracket: BlockIndent
 AlignEscapedNewlinesLeft: false
 AlignOperands:   true
 AlignTrailingComments: true
@@ -21,7 +21,7 @@ BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: false
 BinPackParameters: false
 BinPackArguments: false
-ColumnLimit:     80
+ColumnLimit:     100
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 2
 DerivePointerAlignment: false
@@ -47,7 +47,7 @@ Standard:        Cpp11
 IndentWidth:     2
 TabWidth:        2
 UseTab:          ForIndentation
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Attach
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 SpacesInAngles:  false
